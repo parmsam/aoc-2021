@@ -1,0 +1,41 @@
+---
+title: "aoc-2021-day2"
+author: "parmsam"
+date: "12/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+```
+
+# Q1: What do you get if you multiply your final horizontal position by your final depth?
+```{r}
+dataset <- read.csv(here("input", "input-d2-1.txt"), header=FALSE)
+                 
+dataset_sep <- dataset %>% separate(col = V1, into = c("direction", "units")) 
+
+depth <- dataset_sep %>%
+  filter(direction %in% c("up", "down")) %>% 
+  mutate(units = as.numeric(units)) %>%
+  mutate(units = ifelse(direction == "down", units, -units))
+
+horizontal_pos <- dataset_sep %>%
+  filter(direction %in% c("forward")) %>% 
+  mutate(units = as.numeric(units))
+
+depth_sum <- depth %>% summarize(depth_sum = sum(units)) 
+horiz_sum <- horizontal_pos %>% summarize(horiz_sum = sum(units)) 
+
+depth_sum * horiz_sum
+
+```
+# Q2: What do you get if you multiply your final horizontal position by your final depth?
+```{r}
+
+```
+
