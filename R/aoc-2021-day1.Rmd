@@ -1,0 +1,33 @@
+---
+title: "aoc-2021-day1"
+author: "parmsam"
+date: "12/1/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+```
+
+# Q1: count the number of times a depth measurement increases from the previous measurement. (There is no measurement before the first measurement.) 
+```{r}
+data1 <- read.csv(here("input", "input-d1-1.txt"), header=FALSE)
+
+data1 %>% mutate(change = ifelse( lag(V1) < V1, "increased", "not increased") ) %>% 
+  count(change) %>% 
+  filter(change == "increased")
+                 
+```
+# Q2: count the number of times the sum of measurements in this sliding window increases from the previous sum.
+
+```{r}
+data1 %>% transmute(group_sum = V1 + lead(V1, n=1) + lead(V1, n=2)) %>%
+  mutate(change = ifelse( lag(group_sum) < group_sum, "increased", "not increased") ) %>% 
+  count(change) %>% 
+  filter(change == "increased")
+```
+
