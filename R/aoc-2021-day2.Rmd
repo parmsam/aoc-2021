@@ -36,6 +36,25 @@ depth_sum * horiz_sum
 ```
 # Q2: What do you get if you multiply your final horizontal position by your final depth?
 ```{r}
+unit_conversion <- function(direction, units){
+  ifelse()
+}
+calc <- dataset_sep %>% 
+  mutate(units = as.numeric(units)) %>%
+  mutate(units = ifelse(direction == "down", units, 
+                        ifelse( direction == "up", -units,
+                                ifelse( direction == "forward", units, NA)))
+           ) %>%
+  mutate(horizontal_calc = ifelse(direction == "forward", units, 0)) %>%
+  mutate(horizontal_calc = cumsum(horizontal_calc)) %>%
+  mutate(aim_contribution = ifelse(direction != "forward", units, 0)) %>%
+  mutate(aim_total = cumsum(aim_contribution) ) %>%
+  mutate(depth_calc = ifelse(direction == "forward", units * aim_total, 0)) %>%
+  mutate(depth_calc = cumsum(depth_calc) ) %>%
+  tail(1)
 
+calc %>% 
+  mutate(answer = depth_calc * horizontal_calc)
+  
 ```
 
