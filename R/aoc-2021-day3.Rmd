@@ -1,0 +1,155 @@
+---
+title: "aoc-2021-day3"
+author: "parmsam"
+date: "12/3/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+```
+
+# Q1: Use the binary numbers in your diagnostic report to calculate the gamma rate and epsilon rate, then multiply them together. What is the power consumption of the submarine? (Be sure to represent your answer in decimal, not binary.)
+```{r}
+#create flip bits function
+flip_bits<-function(binary_number){
+  binary_number %>% 
+    as.character %>%
+    str_replace_all("0","2") %>%
+    str_replace_all("1","0") %>%
+    str_replace_all("2","1")
+}
+# flip_bits("1001")
+
+# data1 <- read_csv(here("input", "input-d3-example.txt"), col_names=FALSE )
+data1 <- read_csv(here("input", "input-d3-1.txt"), col_names=FALSE )
+
+ncharsCol <- nchar(data1$X1[[1]])
+letterSubset <- LETTERS[1:ncharsCol]
+data1_sep <-data1 %>% separate(X1, into = letterSubset, sep="(?<=.)", remove=TRUE)
+  
+data1_calc1 <- data1_sep %>% map_dfc(table) %>% cbind(response = c("0","1"),.) %>%
+  pivot_longer(!response, names_to="position", values_to = "count") 
+  
+data1_calc2 <- data1_calc1 %>%
+  group_by(position) %>%
+  top_n(1, wt = count) %>% 
+  arrange(position) %>%
+  ungroup() %>% select(position, response) %>%
+  pivot_wider(names_from=position, values_from=response) %>%
+  unite("gamma_rate", sep="") %>%
+  mutate(epsilon_rate = flip_bits(gamma_rate))
+
+#convert binary strings to integers
+data1_calc2 %>% mutate(gamma_value = base::strtoi(gamma_rate, base = 2),
+                     epsilon_value = base::strtoi(epsilon_rate, base = 2)
+                     ) %>%
+  mutate(answer1 = gamma_value * epsilon_value)
+  
+
+```
+
+# Q2: 
+```{r}
+get_mostfreq <- function(df, col){
+  x <- df %>% count_({{col}}, sort=TRUE) %>% head(1) %>% select(1) %>% pull()
+  
+  a <- df %>% count_({{col}}, sort=TRUE) %>% head(1) %>% select(2) %>% pull()  
+  b <- df %>% count_({{col}}, sort=TRUE) %>% tail(1) %>% select(2) %>% pull()  
+  if(a == b){
+    return("1")
+  }else{
+    return(x)
+  }
+}
+data2_steps <- data1_sep
+for(letter in letterSubset){
+  print(letter)
+  current_pos <- get_mostfreq(data2_steps, letter)
+  print(current_pos)
+  # browser()
+  data2_steps <- data2_steps %>% filter(!!as.symbol(letter) == current_pos)
+  if(nrow(data2_steps ) == 1){
+    print(data2_steps)
+    break
+  }
+}
+# data2_steps
+
+get_leastfreq <- function(df, col){
+  # df %>% count_({{col}}, sort=TRUE) %>% tail(1) %>% select(1) %>% pull()
+  x <- df %>% count_({{col}}, sort=TRUE) %>% tail(1) %>% select(1) %>% pull()
+  
+  a <- df %>% count_({{col}}, sort=TRUE) %>% head(1) %>% select(2) %>% pull()  
+  b <- df %>% count_({{col}}, sort=TRUE) %>% tail(1) %>% select(2) %>% pull()
+  if(a == b){
+    return("0")
+  }else{
+    return(x)
+  }
+}
+data3_steps <- data1_sep
+for(letter in letterSubset){
+  print(letter)
+  current_pos <- get_leastfreq(data3_steps, letter)
+  print(current_pos)
+  # browser()
+  data3_steps <- data3_steps %>% filter(!!as.symbol(letter) == current_pos)
+  if(nrow(data3_steps ) == 1){
+    break
+    print(data3_steps)
+  }
+}
+# data3_steps
+
+#convert binary strings to integers
+data2_steps %>% unite("o2gen_rate", sep="") %>%
+  mutate(o2gen_value = base::strtoi(o2gen_rate, base = 2)) %>%
+  cbind(
+    data3_steps %>% unite("co2scrub_rate", sep="") %>%
+    mutate(co2scrub_value = base::strtoi(co2scrub_rate, base = 2))    
+  ) %>% 
+  mutate(answer1 = o2gen_value * co2scrub_value)
+
+# current_pos <- get_mfresp(data1_sep, "A")
+# data2_sep <- data1_sep %>% filter(A == current_pos)
+# 
+# current_pos <- get_mfresp(data2_sep, "B")
+# data3_sep <- data2_sep %>% filter(B == current_pos)
+# 
+# current_pos <- get_mfresp(data3_sep, "C")
+# data4_sep <- data3_sep %>% filter(C == current_pos)
+# 
+# current_pos <- get_mfresp(data4_sep, "D")
+# data5_sep <- data4_sep %>% filter(D == current_pos)
+# 
+# current_pos <- get_mfresp(data5_sep, "E")
+# data6_sep <- data5_sep %>% filter(E == current_pos)
+# 
+# current_pos <- get_mfresp(data6_sep, "F")
+# data7_sep <- data6_sep %>% filter(F == current_pos)
+# 
+# current_pos <- get_mfresp(data7_sep, "G")
+# data8_sep <- data7_sep %>% filter(G == current_pos)
+# 
+# current_pos <- get_mfresp(data8_sep, "H")
+# data9_sep <- data8_sep %>% filter(H == current_pos)
+# 
+# current_pos <- get_mfresp(data9_sep, "I")
+# data10_sep <- data9_sep %>% filter(I == current_pos)
+# 
+# current_pos <- get_mfresp(data10_sep, "J")
+# data11_sep <- data10_sep %>% filter(J == current_pos)
+# 
+# current_pos <- get_mfresp(data11_sep, "K")
+# data12_sep <- data11_sep %>% filter(K == current_pos)
+# 
+# current_pos <- get_mfresp(data12_sep, 'L')
+# data13_sep <- data12_sep %>% filter(L == current_pos)
+# data13_sep
+```
+

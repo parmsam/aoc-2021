@@ -1,0 +1,25 @@
+---
+title: "aoc-2021-dayX"
+author: "parmsam"
+date: "12/X/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+```
+
+# Q1: 
+```{r}
+data1 <- read.csv(here("input", "input-dX-1.txt"), header=FALSE)
+```
+# Q2: 
+```{r}
+
+  
+```
+
