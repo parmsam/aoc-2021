@@ -78,7 +78,6 @@ for(letter in letterSubset){
     break
   }
 }
-# data2_steps
 
 get_leastfreq <- function(df, col){
   # df %>% count_({{col}}, sort=TRUE) %>% tail(1) %>% select(1) %>% pull()
@@ -104,7 +103,6 @@ for(letter in letterSubset){
     print(data3_steps)
   }
 }
-# data3_steps
 
 #convert binary strings to integers
 data2_steps %>% unite("o2gen_rate", sep="") %>%
@@ -115,41 +113,5 @@ data2_steps %>% unite("o2gen_rate", sep="") %>%
   ) %>% 
   mutate(answer1 = o2gen_value * co2scrub_value)
 
-# current_pos <- get_mfresp(data1_sep, "A")
-# data2_sep <- data1_sep %>% filter(A == current_pos)
-# 
-# current_pos <- get_mfresp(data2_sep, "B")
-# data3_sep <- data2_sep %>% filter(B == current_pos)
-# 
-# current_pos <- get_mfresp(data3_sep, "C")
-# data4_sep <- data3_sep %>% filter(C == current_pos)
-# 
-# current_pos <- get_mfresp(data4_sep, "D")
-# data5_sep <- data4_sep %>% filter(D == current_pos)
-# 
-# current_pos <- get_mfresp(data5_sep, "E")
-# data6_sep <- data5_sep %>% filter(E == current_pos)
-# 
-# current_pos <- get_mfresp(data6_sep, "F")
-# data7_sep <- data6_sep %>% filter(F == current_pos)
-# 
-# current_pos <- get_mfresp(data7_sep, "G")
-# data8_sep <- data7_sep %>% filter(G == current_pos)
-# 
-# current_pos <- get_mfresp(data8_sep, "H")
-# data9_sep <- data8_sep %>% filter(H == current_pos)
-# 
-# current_pos <- get_mfresp(data9_sep, "I")
-# data10_sep <- data9_sep %>% filter(I == current_pos)
-# 
-# current_pos <- get_mfresp(data10_sep, "J")
-# data11_sep <- data10_sep %>% filter(J == current_pos)
-# 
-# current_pos <- get_mfresp(data11_sep, "K")
-# data12_sep <- data11_sep %>% filter(K == current_pos)
-# 
-# current_pos <- get_mfresp(data12_sep, 'L')
-# data13_sep <- data12_sep %>% filter(L == current_pos)
-# data13_sep
 ```
 
