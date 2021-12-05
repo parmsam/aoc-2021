@@ -1,0 +1,78 @@
+---
+title: "aoc-2021-day4"
+author: "parmsam"
+date: "12/04/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+```
+
+# Q1: 
+```{r}
+metadata1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE) %>% 
+  filter(!is.na(X2)) %>% 
+  unite("choices", sep=", ") %>%
+  mutate(choices = str_split(choices,", "))
+
+data1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE, skip = 1) %>%
+  mutate(group1 = (row_number()-1)%/%5) %>%
+  mutate(group1 = group1 + 1) 
+
+data1 <- data1 %>% 
+  separate(col = X1, into= LETTERS[1:5], sep = regex("\\s+"))
+
+data1_split <- data1 %>% split(x = ., f = .$group1)
+
+data1_split <- map(data1_split, ~select(., -group1))
+
+```
+# Q2: 
+```{r}
+# iris %>% mutate_all(~str_replace(.,"5.1", "X"))
+replace_function <- function(df, a, b){
+  df %>% mutate_all(~str_replace(., {{a}}, {{b}}))
+}
+
+break_condition <- function(df, x){
+  a <- df %>% filter(if_any(everything(), ~. == "x"))
+  return(a)
+}
+
+transpose_multDFs <- function(df){
+  a <- t(df)
+  a <- data.frame(a)
+  colnames(a) <- LETTERS[1:5]
+  rownames(a) <- NULL
+  return(a)
+}
+data1_steps <- data1_split
+data1_steps_transp <- map(data1_split, ~transpose_multDFs(.))
+
+used_choices <- c()
+for(i in metadata1[[1]][[1]]){
+  print(i)
+  # used_choices <- append(used_choices, i)
+  data1_steps <- map(data1_steps, ~replace_function(.,{i}, "X")) 
+  solution_test_a <- map_df(data1_steps, ~break_condition(.,"X"))
+  solution_test_b <- map_df(data1_steps_transp, ~break_condition(.,"X"))
+  # print(data1_steps)
+  if (nrow(solution_test_a)>1){
+    print("look at a")
+    break
+  } else if(nrow(solution_test_b)>1){
+    print("look at b")
+    break
+  }
+}
+solution_test
+
+# unlist(iris) %>% as.vector()
+# unlist(data.frame(t(iris[,-1]))) %>% as.vector()
+```
+
