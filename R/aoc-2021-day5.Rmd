@@ -13,10 +13,20 @@ library(stringr)
 library(here)
 ```
 
-# Q1: 
+# Q1: Consider only horizontal and vertical lines. At how many points do at least two lines overlap?
+
 ```{r}
-data1 <- read.csv(here("input", "input-d5-1.txt"), header=FALSE)
+data1 <- read.csv(here("input", "input-d5-1.txt"), header=FALSE, sep =",") 
+data1 <- data1 %>% separate(V2, into = c("V2_1","V2_2"), sep = " -> ") %>% 
+  rename(x1 = V1, y1 = V2_1, x2 = V2_2, y2 = V3) %>%
+  mutate(y1 = as.numeric(y1), x2 = as.numeric(x2)) 
 ```
+
+```{r}
+data1_filt <- data1 %>% filter(x1 == x2 | y1 == y2)
+```
+
+
 # Q2: 
 ```{r}
 
