@@ -11,6 +11,7 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 library(here)
+library(purrr)
 ```
 
 # Q1: Consider only horizontal and vertical lines. At how many points do at least two lines overlap?
@@ -24,12 +25,41 @@ data1 <- data1 %>% separate(V2, into = c("V2_1","V2_2"), sep = " -> ") %>%
 
 ```{r}
 data1_filt <- data1 %>% filter(x1 == x2 | y1 == y2)
+
+seq_pair1 <- function(x1, y1, x2, y2){
+  n_a = 1
+  n_b = 1
+  if(x1 > x2){
+    n_a = -1
+  }
+  if(y1 > y2){
+    n_b = -1
+  }
+  a <- seq(x1, x2, n_a)
+  b <- seq(y1, y2, n_b)
+  
+  if(x1 != x2 & y1 != y2){
+    temp_df <- data.frame(a = a, b = b)
+    val_set <- temp_df %>% pmap(str_c, sep=",") %>% unlist()
+    return(val_set)
+  }
+  
+  val_set <- cross2(a,b) %>% map_chr(str_c, collapse = ",")
+  
+  return(val_set)
+}
+
+paths1 <- pmap(data1_filt, seq_pair1) %>% unlist()
+paths1[paths1 %>% duplicated()] %>% unique() %>% length()
+
 ```
 
 
-# Q2: 
-```{r}
+# Q2: Consider all of the lines. At how many points do at least two lines overlap?
 
-  
+```{r}
+paths2 <- pmap(data1, seq_pair1) %>% unlist()
+paths2[paths2 %>% duplicated()] %>% unique() %>% length()
+
 ```
 
