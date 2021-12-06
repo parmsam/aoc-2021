@@ -166,7 +166,6 @@ for(i in bingo_choices){
     solution_boards <- rbind(solution_boards, solution_board)
     # break
   }
-  
 }
 
 solution_boards <- solution_boards %>% ungroup() %>% group_by(group1) %>% mutate(row_number = row_number()) %>% filter(row_number<=5)
