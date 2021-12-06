@@ -11,20 +11,21 @@ library(tidyverse)
 library(lubridate)
 library(stringr)
 library(here)
+library(glue)
 ```
 
 # Q1: To guarantee victory against the giant squid, figure out which board will win first. What will your final score be if you choose that board?
 
 ## import and setup data ----
-```{r}
-metadata1 <- read_csv(here("input", "input-d4-example.txt"), col_names=FALSE) %>%
-# metadata1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE) %>%
+```{r, warning = FALSE}
+# metadata1 <- read_csv(here("input", "input-d4-example.txt"), col_names=FALSE) %>%
+metadata1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE) %>%
   filter(!is.na(X2)) %>% 
   unite("choices", sep=", ") %>%
   mutate(choices = str_split(choices,", "))
 
-data1 <- read_csv(here("input", "input-d4-example.txt"), col_names=FALSE, skip = 1) %>%
-# data1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE, skip = 1) %>%
+# data1 <- read_csv(here("input", "input-d4-example.txt"), col_names=FALSE, skip = 1) %>%
+data1 <- read_csv(here("input", "input-d4-1.txt"), col_names=FALSE, skip = 1) %>%
   mutate(group1 = (row_number()-1)%/%5) %>%
   mutate(group1 = group1 + 1) %>%
   mutate(group1 = paste0("G", group1))
@@ -45,8 +46,7 @@ replace_function <- function(df, a, b){
   a <- df %>% mutate_all(~str_replace(., paste0("^",{{a}},"$" ), {{b}}))
   return(a)
 }
-# check_colmatch <- function(df, char1){
-# }
+
 break_condition <- function(df, x, n = 5){
   group_name <- df %>% select(group1) %>% unique() %>% pull()
   df <- df %>% select(-group1)
@@ -55,19 +55,21 @@ break_condition <- function(df, x, n = 5){
   b <- a %>% summarise_all(funs(n_distinct(.))) %>%
     select_if(. == 1)
   
-  if(nrow(b) == 1 & ncol(b) == 1 & nrow(a) == 5){
-    print(a)
+  if(nrow(b) == 1 & ncol(b) == 1 & nrow(a) >= 5){
+    # print(a)
     a <- a %>% mutate(group1 = group_name)
     return(a)
   }
 }
-# break_condition(data1_split[[3]],"X")
-# break_condition(replace_function(data1_split[[4]], "1", "X"),"X")
-# break_condition(replace_function(data1_split[[4]] %>% mutate(X1 = "X"), "1", "X"),"X")
+break_condition(data1_split[[3]],"X")
+break_condition(replace_function(data1_split[[4]], "1", "X"),"X")
+break_condition(replace_function(data1_split[[4]] %>% mutate(X1 = "X"), "1", "X"),"X")
+break_condition(replace_function(data1_split[[4]] %>% mutate(X1 = c("X","X","X","X","X")), "1", "X"),"X")
+break_condition(replace_function(data1_split[[4]] %>% mutate(X1 = c("X","Y","X","X","X")), "1", "X"),"X")
 
 transpose_multDFs <- function(df){
   group_name <- df %>% select(group1) %>% unique() %>% pull()
-  # df <- df %>% select(-group1)
+  df <- df %>% select(-group1)
   a <- t(df)
   a <- data.frame(a) %>% mutate(group1 = {group_name})
   colnames(a) <- c(LETTERS[1:5], "group1")
@@ -84,22 +86,24 @@ data1_steps_transp <- map(data1_split, ~transpose_multDFs(.))
 used_choices <- c()
 bingo_choices <- metadata1[[1]][[1]]
 for(i in bingo_choices){
-  print(i)
+  print(glue("this bingo choice made: {i}") )
   used_choices <- append(used_choices, i)
-  data1_steps <- map(data1_steps, ~replace_function(.,{i}, "X")) 
+  data1_steps <- map_df(data1_steps, ~replace_function(.,{i}, "X")) %>% split(x = ., f = .$group1)  
   solution_test_a <- map_df(data1_steps, ~break_condition(.,"X"))
   
-  data1_steps_transp <- map(data1_steps_transp, ~replace_function(.,{i}, "X")) 
+  data1_steps_transp <- map_df(data1_steps_transp, ~replace_function(.,{i}, "X")) %>% split(x = ., f = .$group1)  
   solution_test_b <- map_df(data1_steps_transp, ~break_condition(.,"X"))
   
   # print(data1_steps)
   if (nrow(solution_test_a)>1){
     print(solution_test_a)
     solution_board <- solution_test_a
+    print(glue("winning choice: {i}"))
     break
   } else if(nrow(solution_test_b)>1){
     print(solution_test_b)
     solution_board <- solution_test_b
+    print(glue("winning choice: {i}"))
     break
   }
 }
@@ -114,49 +118,61 @@ last_choice * sum_unmarked_numbs
 # Q2: Figure out which board will win last. Once it wins, what would its final score be?
 ## process data for q2 ----
 ```{r}
+number_boards <- length(data1_split)
 data1_steps <- data1_split
 data1_steps_transp <- map(data1_split, ~transpose_multDFs(.))
 
 used_choices <- c()
+winning_choices <- c()
+solution_boards <- data.frame()
+
 bingo_choices <- metadata1[[1]][[1]]
-solution_boards <- list()
+
 for(i in bingo_choices){
-  print(i)
-  # used_choices <- append(used_choices, i)
+  if(length(winning_choices) == number_boards ){
+    break
+  }
+  print(glue("this bingo choice made: {i}") )
+  used_choices <- append(used_choices, i)
+  
   data1_steps <- map(data1_steps, ~replace_function(.,{i}, "X")) 
   solution_test_a <- map_df(data1_steps, ~break_condition(.,"X"))
   
   data1_steps_transp <- map(data1_steps_transp, ~replace_function(.,{i}, "X")) 
   solution_test_b <- map_df(data1_steps_transp, ~break_condition(.,"X"))
   
-  # print(data1_steps)
   if(nrow(solution_test_a)>1){
-    used_choices <- append(used_choices, i)
-    print(paste0("winning choice: ", i))
-    print(solution_test_a)
-    solution_board <- solution_test_a
+    print(glue("winning choice: {i}"))
+    winning_choices <- append(winning_choices, i)
 
+    solution_board <- solution_test_a
+    win_group_name <- solution_board %>% select(group1) %>% unique() %>% pull()
     win_group_number <- solution_board %>% select(group1) %>% unique() %>% pull() %>% str_remove("G") %>% as.numeric()
+    
     print(win_group_number)
-    data1_steps <- data1_steps[-win_group_number]
-    solution_boards <- c(solution_boards, solution_test_a)
+    solution_board <- solution_board %>% mutate(winning_choice = i)
+    solution_boards <- rbind(solution_boards, solution_board)
     # break
   }else if(nrow(solution_test_b)>1){
-    used_choices <- append(used_choices, i)
-    print(paste0("winning choice: ", i))
-    print(solution_test_b)
+    print(glue("winning choice: {i}"))
+    winning_choices <- append(winning_choices, i)
+
     solution_board <- solution_test_b
-    
+    win_group_name <- solution_board %>% select(group1) %>% unique() %>% pull() 
     win_group_number <- solution_board %>% select(group1) %>% unique() %>% pull() %>% str_remove("G") %>% as.numeric()
+    
     print(win_group_number)
-    data1_steps_transp <- data1_steps_transp[-win_group_number]
-    solution_boards <- c(solution_boards, solution_test_b)
+    solution_board <- solution_board %>% mutate(winning_choice = i)
+    solution_boards <- rbind(solution_boards, solution_board)
     # break
   }
+  
 }
-# solution_board <- solution_boards %>% tail(1)
-last_choice <- used_choices %>% tail(1) %>% as.numeric()
-sum_unmarked_numbs <- solution_board %>% select(-group1) %>%
+
+solution_boards <- solution_boards %>% ungroup() %>% group_by(group1) %>% mutate(row_number = row_number()) %>% filter(row_number<=5)
+solution_board <- solution_boards %>% tail(5)
+last_choice <- solution_board %>% select(winning_choice) %>% unique() %>% pull() %>% as.numeric()
+sum_unmarked_numbs <- solution_board %>% select(-group1, -winning_choice, -row_number) %>%
   unlist() %>% as.vector() %>% str_remove_all("X") %>% as.numeric() %>% sum(na.rm=TRUE)
 
 last_choice * sum_unmarked_numbs
