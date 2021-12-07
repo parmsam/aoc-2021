@@ -12,11 +12,12 @@ library(lubridate)
 library(stringr)
 library(here)
 library(purrr)
+library(glue)
 ```
 
 # Q1: 
 ```{r}
-data1 <- read.csv(here("input", "input-dX-1.txt"), header=FALSE)
+data1 <- read_csv(here("input", "input-dX-1.txt"), col_names =FALSE)
 ```
 # Q2: 
 ```{r}

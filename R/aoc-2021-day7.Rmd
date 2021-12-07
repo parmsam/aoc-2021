@@ -1,0 +1,64 @@
+---
+title: "aoc-2021-day7"
+author: "parmsam"
+date: "12/X/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+library(purrr)
+library(glue)
+```
+
+# Q1: Determine the horizontal position that the crabs can align to using the least fuel possible. How much fuel must they spend to align to that position?
+```{r}
+# data1 <- read_csv(here("input", "input-d7-example.txt"), col_names = FALSE) %>% as_vector()
+data1 <- read_csv(here("input", "input-d7-1.txt"), col_names =FALSE) %>% as_vector()
+ 
+least_fuel_pos <- median(data1)
+print(least_fuel_pos)
+fuel_costs <- abs(data1 - least_fuel_pos)
+sum( fuel_costs )
+# 355592
+```
+
+# Q2: Determine the horizontal position that the crabs can align to using the least fuel possible so they can make you an escape route! How much fuel must they spend to align to that position?
+```{r}
+nth_triang <- function(n){
+  if(!is.numeric(n)){
+    stop("Not numeric, use number instead")
+  }
+  return(n*(n+1)/2)
+}
+
+calc_fuel_cost <- function(least_fuel_pos){
+  if(!is.numeric(least_fuel_pos)){
+    stop("Not numeric, use number instead")
+  }
+  fuel_costs <- nth_triang( abs(data1 - least_fuel_pos) )
+  s <- sum(fuel_costs)
+  return(s)
+}
+
+#brute force it to find minimum fuel cost and position
+#initialize vals and search space
+check_vals <- c( (0):(median_d1+max(data1)))
+min_fuel_cost <- Inf
+for(i in check_vals){
+  # print(i)
+  test <- calc_fuel_cost(i)
+  if(test < min_fuel_cost){
+    min_fuel_cost = test
+    horizontal_pos <- i
+  }
+}
+horizontal_pos
+min_fuel_cost
+# 101618069
+```
+

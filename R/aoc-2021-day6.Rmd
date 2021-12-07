@@ -12,15 +12,74 @@ library(lubridate)
 library(stringr)
 library(here)
 library(purrr)
+library(glue)
 ```
 
-# Q1: 
+# Q1: Find a way to simulate lanternfish. How many lanternfish would there be after 80 days?
+
 ```{r}
 data1 <- read.csv(here("input", "input-d6-1.txt"), header=FALSE)
-```
-# Q2: 
-```{r}
+# data1 <- read_csv(here("input", "input-d6-example.txt"), col_names = FALSE)
+data1_vect0 <- data1 %>% unlist() %>% as.vector()
 
+data1_vect <- data1_vect0
+
+int_timer1 <- function(vect){
+  add_ct <- sum(vect == 0)
+  vect <- c(vect, rep(9, add_ct))
   
+  vect <- vect-1
+  vect <- replace(vect, vect==-1, 6)
+  # pos = 1
+
+  return(vect)
+}
 ```
 
+```{r}
+data1_vect <- data1_vect0
+cur_day = 1
+days = 80
+length_vect <- c()
+while(cur_day <= days){
+  data1_vect <- int_timer1(data1_vect)
+  print(glue("After {cur_day} days: {glue_collapse(data1_vect, sep = ',')}"))
+  cur_day = cur_day + 1
+}
+# print(data1_vect)
+length(data1_vect)
+# 390111
+```
+
+# Q2: How many lanternfish would there be after 256 days?
+
+```{r}
+data1_vect_alt <- factor(data1_vect0, levels = as.character(seq(0,8)))
+cur_day = 1
+days = 256
+data2_vector <- table(data1_vect_alt) %>% as.vector()
+while(cur_day <= days){
+  data2_vector_copy <- data2_vector
+  
+  data2_vector[1] <- data2_vector[2]
+  data2_vector[2] <- data2_vector[3]
+  data2_vector[3] <- data2_vector[4]
+  data2_vector[4] <- data2_vector[5]
+  data2_vector[5] <- data2_vector[6]
+  data2_vector[6] <- data2_vector[7]
+  data2_vector[7] <- sum(data2_vector[8], data2_vector_copy[1])
+  data2_vector[8] <- data2_vector[9]
+  data2_vector[9] <- data2_vector_copy[1]
+  cur_day = cur_day + 1
+  print(cur_day)
+  print(sum(data2_vector))
+}
+#turn off scientific notation
+options(scipen = 999)
+answer <- as.numeric(sum(data2_vector))
+print(answer)
+# 1746710169834
+
+#note: q1 approach didnt work b/c of memory limitation, thought of above way that is less computationally intensive instead, can also use same method on q1 by changing days variable to 80
+
+```
