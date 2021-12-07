@@ -47,7 +47,7 @@ calc_fuel_cost <- function(least_fuel_pos){
 
 #brute force it to find minimum fuel cost and position
 #initialize vals and search space
-check_vals <- c( (0):(median_d1+max(data1)))
+check_vals <- c((0):(median_d1+max(data1)))
 min_fuel_cost <- Inf
 for(i in check_vals){
   # print(i)
