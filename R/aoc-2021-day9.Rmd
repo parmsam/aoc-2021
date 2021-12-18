@@ -71,7 +71,7 @@ data1_risklevs <- data1_lpoints %>% mutate(risk_levels = low_point + 1)
 
 data1_risklevs %>% summarize(answer1 = sum(risk_levels, na.rm = TRUE))
 ```
-# Q2: 
+# Q2: What do you get if you multiply together the sizes of the three largest basins?
 ```{r}
 
   

@@ -1,0 +1,92 @@
+---
+title: "aoc-2021-day10"
+author: "parmsam"
+date: "12/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+library(purrr)
+library(glue)
+```
+
+# Q1: 
+```{r}
+# data1 <- read_csv(here("input", "input-d10-example.txt"), col_names =FALSE)
+data1 <- read_csv(here("input", "input-d10-1.txt"), col_names =FALSE)
+
+open_chunks <- c("[","(","{","<")
+close_chunks <- c("]",")","}",">") 
+legal_pairs <- data.frame(open_chunks , close_chunks)
+
+cost_lookup <- tribble(
+  ~"close_chunk", ~"points",
+  ")", 3,
+  "]", 57,
+  "}", 1197,
+  ">", 25137
+)
+
+get_open_chunks<- function(line){
+  chunk_vector <- line %>% str_split("") %>% .[[1]]
+  rec_oc <- chunk_vector[chunk_vector %in% open_chunks]
+  return(rec_oc)
+}
+get_close_chunks <- function(line){
+  chunk_vector <- line %>% str_split("") %>% .[[1]]
+  rec_cc <- chunk_vector[chunk_vector %in% close_chunks]
+  return(rec_cc)
+}
+
+flip_oc <- function(open_chunk1){
+  if(open_chunk1 %in% open_chunks){
+    close_chunk <- legal_pairs %>% 
+      filter(open_chunks == open_chunk1) %>% 
+      pull(close_chunks)
+    return(close_chunk)
+  }
+}
+first_mismatch <- function(line){
+  chunk_vector <- line %>% str_split("") %>% .[[1]]
+  rec_oc <- c()
+  for(i in chunk_vector){
+    if(i %in% open_chunks){
+      rec_oc <- c(rec_oc,i)
+    } else if(i %in% close_chunks){
+      # print(i)
+      # print(rec_oc)
+      expectation <- flip_oc(tail(rec_oc, 1))
+      if(i !=  expectation){
+        print(glue("Expected {expectation}, but found {i} instead"))
+        return(i)
+      } else{
+        #drop off last open chunk b/c it matched
+        rec_oc <- rec_oc %>% head(-1)
+      }
+    }
+  }
+}
+# example_line <- "{([(<{}[<>[]}>{[]{[(<()>"
+# example_line <- "[[<[([]))<([[{}[[()]]]"
+# example_line <- "[{[{({}]{}}([{[{{{}}([]"
+# example_line <- "[<(<(<(<{}))><([]([]()"
+# example_line <- "<{([([[(<>()){}]>(<<{{"
+# first_mismatch(example_line)
+
+error_scores <- data1 %>% mutate(first_illegal = map(X1, first_mismatch)) %>% 
+  unnest(first_illegal) %>%
+  left_join(cost_lookup, by=c("first_illegal"= "close_chunk"))
+
+error_scores %>% summarize(answer1 = sum(points))
+```
+# Q2: 
+```{r}
+
+  
+```
+
