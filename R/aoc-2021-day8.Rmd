@@ -1,0 +1,85 @@
+---
+title: "aoc-2021-day8"
+author: "parmsam"
+date: "12/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+library(purrr)
+library(glue)
+```
+
+# Q1: In the output values, how many times do digits 1, 4, 7, or 8 appear?
+```{r}
+# data1 <- read_csv(here("input", "input-d8-example.txt"), col_names =FALSE)
+data1 <- read_csv(here("input", "input-d8-1.txt"), col_names =FALSE)
+
+data1_sep <- data1 %>% separate(X1, into = c("X1","X2"), sep = "\\|") 
+  
+segment_lookup <- tribble(
+  ~number, ~segments,
+  0, c("a","b","c","e","f","g"),
+  1, c("c","f"),
+  2, c("a","c","d","e","g"),
+  3, c("a","c","d","f","g"),
+  4, c("b","c","d","f"),
+  5, c("a","b","d","f","g"),
+  6, c("a","b","d","e","f","g"),
+  7, c("a","c","f"),
+  8, c("a","b","c","d","e","f","g"),
+  9, c("a","b","c","d","f","g")
+) %>% mutate(count_segments = map(segments, length)) %>% 
+  unnest(count_segments)
+
+#select for unique segment counts and create vector object with info
+unique_number_segments <- segment_lookup %>% group_by(count_segments) %>% 
+  add_tally() %>% filter(n==1) %>% 
+  select(count_segments) %>% pull()
+
+sep_count <- function(string1, sep1 = "\\s"){
+  string1 %>% 
+    str_split(sep1) %>% 
+    map(nchar)
+}
+# sep_count("fdgacbe cefdb cefbgd gcbe")
+
+compare_v1v2 <- function(vector1, vector2 = unique_number_segments){
+  vector1 %in% vector2
+}
+
+rowcounts_df <- data1_sep %>% select(X2) %>%
+  mutate(segment_lengths = sep_count(X2)) %>%
+  mutate(unique_segment_lgl = map(segment_lengths, compare_v1v2)) %>%
+  mutate(unique_segment_count = map(unique_segment_lgl, sum)) %>% 
+  unnest(unique_segment_count) 
+
+rowcounts_df %>% summarize(answer1 = sum(unique_segment_count))
+```
+# Q2: For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
+```{r}
+seg_distribution <- segment_lookup %>% select(segments) %>% unnest(segments) %>% count(segments)
+
+segment_lookup %>% arrange(count_segments)
+
+encode_to_numbers <- function(vector1){
+  tracking_vect <- c()
+  for(i in vector1){
+    if(nchar(i) == 2){
+      tracking_vect <- c(tracking_vect, 1)
+     } else if (nchar(i) == 3){
+      tracking_vect <- c(tracking_vect,7)
+     } else if (nchar(i) == 4){
+      tracking_vect <- c(tracking_vect,4)
+     } else if (nchar(i) == 7){
+      tracking_vect <- c(tracking_vect,8)
+     }
+  }
+}
+```
+

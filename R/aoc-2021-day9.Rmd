@@ -1,0 +1,79 @@
+---
+title: "aoc-2021-day9"
+author: "parmsam"
+date: "12/12/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(here)
+library(purrr)
+library(glue)
+```
+
+# Q1: 
+```{r}
+# data1 <- read_csv(here("input", "input-d9-example.txt"), col_names =FALSE)
+data1 <- read_csv(here("input", "input-d9-1.txt"), col_names =FALSE)
+
+into_cols <- 0:nchar(data1[1,]) %>% as.character() %>% str_c("X",.)
+data1_sep <- data1 %>% 
+  separate(col = X1, into = into_cols, sep = "") %>% 
+  select(-X0) %>% 
+  mutate(row = row_number(), .before = everything() )
+
+data1_long <- data1_sep %>% pivot_longer(cols = X1:X10, names_to = "column") %>%
+  mutate(column = as.integer(str_remove(column, "X"))) %>%
+  group_by(row) %>%
+  mutate(value = as.numeric(value)) %>% 
+  mutate(left = lag(value), right = lead(value) ) %>%
+  group_by(column) %>%
+  mutate(up = lag(value), down = lead(value))
+
+lp_check <- function(value, left, right, up, down){
+  if( !is.na(left) ){
+    if( value >= left){
+      return(NA)
+    }
+  } 
+  if ( !is.na(right)){
+    if( value >= right){
+      return(NA)
+    }
+  } 
+  if ( !is.na(up)){
+    if( value >= up){
+      return(NA)
+    }
+  }
+   
+  if ( !is.na(down)){
+    if( value >= down){
+      return(NA)
+    }
+  }
+  
+  return(value)
+}
+
+data1_lpoints <- data1_long %>% 
+  ungroup() %>%
+  mutate(low_point = pmap(list(value, left, right, up, down), lp_check)) %>% 
+  unnest(low_point) %>% 
+  mutate(low_point = as.numeric(low_point)) %>%
+  filter(!is.na(low_point ))
+
+data1_risklevs <- data1_lpoints %>% mutate(risk_levels = low_point + 1)
+
+data1_risklevs %>% summarize(answer1 = sum(risk_levels, na.rm = TRUE))
+```
+# Q2: 
+```{r}
+
+  
+```
+

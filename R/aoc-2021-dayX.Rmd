@@ -17,7 +17,8 @@ library(glue)
 
 # Q1: 
 ```{r}
-data1 <- read_csv(here("input", "input-dX-1.txt"), col_names =FALSE)
+data1 <- read_csv(here("input", "input-dX-example.txt"), col_names =FALSE)
+# data1 <- read_csv(here("input", "input-dX-1.txt"), col_names =FALSE)
 ```
 # Q2: 
 ```{r}
