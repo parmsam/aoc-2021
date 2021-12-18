@@ -26,7 +26,7 @@ data1_sep <- data1 %>%
   select(-X0) %>% 
   mutate(row = row_number(), .before = everything() )
 
-data1_long <- data1_sep %>% pivot_longer(cols = X1:X10, names_to = "column") %>%
+data1_long <- data1_sep %>% pivot_longer(cols = into_cols[2]:tail(into_cols,1), names_to = "column") %>%
   mutate(column = as.integer(str_remove(column, "X"))) %>%
   group_by(row) %>%
   mutate(value = as.numeric(value)) %>% 
