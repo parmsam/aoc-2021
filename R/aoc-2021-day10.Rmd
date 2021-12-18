@@ -79,14 +79,77 @@ first_mismatch <- function(line){
 # first_mismatch(example_line)
 
 error_scores <- data1 %>% mutate(first_illegal = map(X1, first_mismatch)) %>% 
-  unnest(first_illegal) %>%
+  unnest(first_illegal,keep_empty=TRUE) %>%
   left_join(cost_lookup, by=c("first_illegal"= "close_chunk"))
 
-error_scores %>% summarize(answer1 = sum(points))
-```
-# Q2: 
-```{r}
+error_scores %>% summarize(answer1 = sum(points, na.rm = TRUE))
 
-  
+#answer:
+#168417
+```
+# Q2: Find the completion string for each incomplete line, score the completion strings, and sort the scores. What is the middle score?
+```{r}
+autocomplete_points <- tribble(
+  ~"close_chunk", ~"points",
+  ")", 1,
+  "]", 2,
+  "}", 3,
+  ">", 4
+  )
+
+# function to autocomplete the chunk
+complete_the_chunk <- function(line){
+  chunk_vector <- line %>% str_split("") %>% .[[1]]
+  rec_oc <- c()
+  for(i in chunk_vector){
+    if(i %in% open_chunks){
+      rec_oc <- c(rec_oc,i)
+    } else if(i %in% close_chunks){
+      # print(i)
+      # print(rec_oc)
+      expectation <- flip_oc(tail(rec_oc, 1))
+      if(i !=  expectation){
+        print(glue("Expected {expectation}, but found {i} instead"))
+      } else{
+        #drop off last open chunk b/c it matched
+        rec_oc <- rec_oc %>% head(-1)
+      }
+    }
+  }
+  add_line <- rec_oc %>% map_chr(., flip_oc) %>% rev()
+  return(add_line)
+}
+# example_line <- "[({(<(())[]>[[{[]{<()<>>"
+# example_line <- "[(()[<>])]({[<{<<[]>>("
+# example_line <- "(((({<>}<{<{<>}{[]{[]{}"
+# complete_the_chunk(example_line)
+
+data2 <- error_scores %>% filter(is.na(points)) %>% 
+  select(-first_illegal, -points) 
+
+scoring_strings <- data2 %>% 
+  mutate(autocomplete = map(X1,complete_the_chunk)) %>% 
+  select(-X1) %>% 
+  mutate(line_number = row_number(), .before = everything())
+  # unnest(autocomplete)
+
+calc_c_cost <- function(ac_vector){
+  total_score <- 0
+  for(i in ac_vector){
+    cc_points <- autocomplete_points %>% filter(close_chunk == i) %>% select(points) %>% pull()
+    total_score <- total_score * 5 + cc_points
+  }
+  return(total_score)
+}
+# example_ac <- c("]", ")", "}", ">")
+# calc_c_cost(example_ac)
+
+scoring_strings %>% mutate(total_points = map(autocomplete, calc_c_cost)) %>%
+  unnest(total_points) %>%
+  pull(total_points) %>% 
+  median()
+
+#answer:
+#2802519786
 ```
 
