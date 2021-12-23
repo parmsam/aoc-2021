@@ -1,3 +1,4 @@
+
 ---
 title: "aoc-2021-dayX"
 author: "parmsam"
@@ -22,7 +23,5 @@ data1 <- read_csv(here("input", "input-dX-example.txt"), col_names =FALSE)
 ```
 # Q2: 
 ```{r}
-
   
 ```
-

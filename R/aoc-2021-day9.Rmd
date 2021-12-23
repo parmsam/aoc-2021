@@ -15,7 +15,7 @@ library(purrr)
 library(glue)
 ```
 
-# Q1: 
+# Q1: Find all of the low points on your heightmap. What is the sum of the risk levels of all low points on your heightmap?
 ```{r}
 # data1 <- read_csv(here("input", "input-d9-example.txt"), col_names =FALSE)
 data1 <- read_csv(here("input", "input-d9-1.txt"), col_names =FALSE)
