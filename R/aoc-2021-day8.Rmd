@@ -53,6 +53,14 @@ compare_v1v2 <- function(vector1, vector2 = unique_number_segments){
   vector1 %in% vector2
 }
 
+compare_v2v1 <- function(vector1, vector2 = unique_number_segments){
+  vector2 %in% vector1
+}
+
+getv2numbers <- function(tf_vec, commparison = unique_number_segments){
+  unique_number_segments[tf_vec]
+}
+
 rowcounts_df <- data1_sep %>% select(X2) %>%
   mutate(segment_lengths = sep_count(X2)) %>%
   mutate(unique_segment_lgl = map(segment_lengths, compare_v1v2)) %>%
@@ -63,23 +71,88 @@ rowcounts_df %>% summarize(answer1 = sum(unique_segment_count))
 ```
 # Q2: For each entry, determine all of the wire/segment connections and decode the four-digit output values. What do you get if you add up all of the output values?
 ```{r}
-seg_distribution <- segment_lookup %>% select(segments) %>% unnest(segments) %>% count(segments)
-
-segment_lookup %>% arrange(count_segments)
-
-encode_to_numbers <- function(vector1){
-  tracking_vect <- c()
-  for(i in vector1){
-    if(nchar(i) == 2){
-      tracking_vect <- c(tracking_vect, 1)
-     } else if (nchar(i) == 3){
-      tracking_vect <- c(tracking_vect,7)
-     } else if (nchar(i) == 4){
-      tracking_vect <- c(tracking_vect,4)
-     } else if (nchar(i) == 7){
-      tracking_vect <- c(tracking_vect,8)
-     }
-  }
+# https://gist.github.com/martinctc/56b3fb701a182f5b8dffceecd65b6d86
+#helper function to sort character string into alphabetic order
+str_arrange <- function(x){
+  x %>%
+    stringr::str_split("") %>% # Split string into letters
+    purrr::map(~sort(.) %>% paste(collapse = "")) %>% # Sort and re-combine
+    as_vector() # Convert list into vector
 }
+
+#prep dataset with numbers we already know for sure
+data2_split <- data1_sep %>%
+  mutate(X1_num_patterns = str_split(str_trim(X1), "\\s")) %>%
+  mutate(X1_num_patterns = map(X1_num_patterns, str_arrange)) %>%
+  mutate(X2_num_patterns = str_split(str_trim(X2), "\\s")) %>%
+  mutate(X2_num_patterns = map(X2_num_patterns, str_arrange))
+
+#get unique segment counts 
+seg_distribution <- segment_lookup %>% 
+  select(segments) %>% unnest(segments) %>% count(segments) %>% 
+  group_by(n) %>% add_tally() %>% ungroup()
+
+find_dist_count <- function(segment1, df =seg_distribution){
+  df %>% filter(segments == {segment1}) %>% pull(n)
+}
+pass_vector <- function(vector1, df = seg_distribution){
+  empty_vec <- c()
+  for(i in vector1){
+    x = find_dist_count(i, df)
+    empty_vec <-c(empty_vec, x)
+  }
+  return(empty_vec)
+}
+
+segment_lookup2 <- segment_lookup %>% 
+  mutate(lookup_key = map(`segments`, pass_vector)) %>%
+  mutate(lookup_key2 = map(lookup_key, str_sort)) %>% 
+  mutate(lookup_key2 = map(lookup_key2, as.numeric))
+
+#helper function to get standarded keys to for lookup 
+get_lookup_key <- function(pattern_case){
+  lookup_df <- data.frame(x = {pattern_case}) %>% 
+    mutate(x = str_split(x, "")) %>%
+    mutate(segment_num = row_number() ) %>%
+    unnest(x) %>% add_count(x)
+  lookup_key <- lookup_df %>% group_by(segment_num) %>% 
+    summarize(x=list(x), n=list(n)) %>% 
+    pull(n)
+  lookup_key <- lookup_key %>% map(str_sort) %>% map(as.numeric)
+  return(lookup_key)
+}
+
+# create master lookup dictionary based on segment distribution by numbers
+final_lookup_keys <- segment_lookup2 %>% pull(number)
+final_lookup_values <- segment_lookup2 %>% pull(lookup_key2)
+final_lookup_dict <- final_lookup_keys; names(final_lookup_dict) <- final_lookup_values %>% map(str_c, collapse="")
+
+#
+answer1 <- data2_split %>% 
+  mutate(X1_lookup_keys = map(X1_num_patterns, get_lookup_key)) %>%
+  mutate(dictionaries = map2(X1_lookup_keys, X1_num_patterns, function(x,y){
+    a <- x
+    names(a) <- y
+    return(a)
+    } 
+  )) %>%
+  mutate(pre_answers = map2(dictionaries, X2_num_patterns, function(x,y){
+      if(y %in% names(x)){
+        return(x[y])
+      }}
+    )) %>%
+  mutate(answers = map(pre_answers, function(x){
+    a <- c()
+    for(i in x){
+      look = str_c(i, collapse="")
+      a <- c(a,final_lookup_dict[look])
+      a <- as.numeric(str_c(a, collapse=""))
+    }
+    return(a)
+  }))
+
+final_answer <- answer1 %>% summarize(a = sum(as.numeric(answers)))
+final_answer
+# 1024649
 ```
 
