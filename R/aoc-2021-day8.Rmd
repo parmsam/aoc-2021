@@ -80,7 +80,7 @@ str_arrange <- function(x){
     as_vector() # Convert list into vector
 }
 
-#prep dataset with numbers we already know for sure
+#prep dataset with segment patterns split into vectors with element arranged alphabetically
 data2_split <- data1_sep %>%
   mutate(X1_num_patterns = str_split(str_trim(X1), "\\s")) %>%
   mutate(X1_num_patterns = map(X1_num_patterns, str_arrange)) %>%
@@ -92,6 +92,7 @@ seg_distribution <- segment_lookup %>%
   select(segments) %>% unnest(segments) %>% count(segments) %>% 
   group_by(n) %>% add_tally() %>% ungroup()
 
+#helper function to get to master key
 find_dist_count <- function(segment1, df =seg_distribution){
   df %>% filter(segments == {segment1}) %>% pull(n)
 }
@@ -127,7 +128,7 @@ final_lookup_keys <- segment_lookup2 %>% pull(number)
 final_lookup_values <- segment_lookup2 %>% pull(lookup_key2)
 final_lookup_dict <- final_lookup_keys; names(final_lookup_dict) <- final_lookup_values %>% map(str_c, collapse="")
 
-#
+#build dataframe with last column to add up for answer
 answer1 <- data2_split %>% 
   mutate(X1_lookup_keys = map(X1_num_patterns, get_lookup_key)) %>%
   mutate(dictionaries = map2(X1_lookup_keys, X1_num_patterns, function(x,y){
